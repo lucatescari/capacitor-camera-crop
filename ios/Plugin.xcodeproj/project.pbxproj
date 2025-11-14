@@ -7,15 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		03EC5C5F2149272400D9B493 /* NativeCameraCropPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 03EC5C5E2149272400D9B493 /* NativeCameraCropPlugin.m */; };
-		03EC5C602149272400D9B493 /* NativeCameraCropPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADFF8C201F53D600D50D53 /* NativeCameraCropPlugin.swift */; };
+		03EC5C5F2149272400D9B493 /* CapacitorCameraCropPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 03EC5C5E2149272400D9B493 /* CapacitorCameraCropPlugin.m */; };
+		03EC5C602149272400D9B493 /* CapacitorCameraCropPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADFF8C201F53D600D50D53 /* CapacitorCameraCropPlugin.swift */; };
 		50ADFF8D201F53D600D50D53 /* Capacitor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50ADFF8B201F53D600D50D53 /* Capacitor.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		03EC5C5E2149272400D9B493 /* NativeCameraCropPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NativeCameraCropPlugin.m; sourceTree = "<group>"; };
+		03EC5C5E2149272400D9B493 /* CapacitorCameraCropPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CapacitorCameraCropPlugin.m; sourceTree = "<group>"; };
 		50ADFF8B201F53D600D50D53 /* Capacitor.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Capacitor.framework; path = ../Capacitor.framework; sourceTree = "<group>"; };
-		50ADFF8C201F53D600D50D53 /* NativeCameraCropPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCameraCropPlugin.swift; sourceTree = "<group>"; };
+		50ADFF8C201F53D600D50D53 /* CapacitorCameraCropPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapacitorCameraCropPlugin.swift; sourceTree = "<group>"; };
 		50ADFF8E201F53D600D50D53 /* Plugin.xcscheme */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Plugin.xcscheme; sourceTree = "<group>"; };
 		50E1A94820377CB70090CE1A /* Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50E1A94B20377CB70090CE1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -44,8 +44,8 @@
 		50ADFF8F201F53D600D50D53 /* Plugin */ = {
 			isa = PBXGroup;
 			children = (
-				50ADFF8C201F53D600D50D53 /* NativeCameraCropPlugin.swift */,
-				03EC5C5E2149272400D9B493 /* NativeCameraCropPlugin.m */,
+				50ADFF8C201F53D600D50D53 /* CapacitorCameraCropPlugin.swift */,
+				03EC5C5E2149272400D9B493 /* CapacitorCameraCropPlugin.m */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -147,8 +147,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03EC5C5F2149272400D9B493 /* NativeCameraCropPlugin.m in Sources */,
-				03EC5C602149272400D9B493 /* NativeCameraCropPlugin.swift in Sources */,
+				03EC5C5F2149272400D9B493 /* CapacitorCameraCropPlugin.m in Sources */,
+				03EC5C602149272400D9B493 /* CapacitorCameraCropPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,7 +290,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks $(FRAMEWORK_SEARCH_PATHS)";
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.nativecameracrop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.capacitorcameracrop;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -317,7 +317,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks $(FRAMEWORK_SEARCH_PATHS)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.nativecameracrop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.capacitorcameracrop;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;

@@ -1,4 +1,4 @@
-package com.example.nativecameracrop
+package com.example.capacitorcameracrop
 
 import android.app.Activity
 import android.content.Intent
@@ -23,12 +23,12 @@ import java.io.FileOutputStream
 import java.io.InputStream
 
 @CapacitorPlugin(
-    name = "NativeCameraCrop"
+    name = "CapacitorCameraCrop"
 )
-class NativeCameraCropPlugin : Plugin() {
+class CapacitorCameraCropPlugin : Plugin() {
 
     companion object {
-        private const val TAG = "NativeCameraCrop"
+        private const val TAG = "CapacitorCameraCrop"
     }
 
     // Single pending camera URI (for ACTION_IMAGE_CAPTURE output)
@@ -476,3 +476,4 @@ class NativeCameraCropPlugin : Plugin() {
         }
     }
 }
+

@@ -1,11 +1,11 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { NativeCameraCropPlugin } from './definitions';
+import type { CapacitorCameraCropPlugin } from './definitions';
 
-const NativeCameraCrop = registerPlugin<NativeCameraCropPlugin>('NativeCameraCrop', {
-  web: () => import('./web').then(m => new m.NativeCameraCropWeb()),
+const CapacitorCameraCrop = registerPlugin<CapacitorCameraCropPlugin>('CapacitorCameraCrop', {
+  web: () => import('./web').then(m => new m.CapacitorCameraCropWeb()),
 });
 
 export * from './definitions';
-export { NativeCameraCrop };
+export { CapacitorCameraCrop };
 

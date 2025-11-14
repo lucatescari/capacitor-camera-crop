@@ -6,7 +6,7 @@ export default {
     {
       file: 'dist/plugin.js',
       format: 'iife',
-      name: 'capacitorNativeCameraCrop',
+      name: 'capacitorCameraCrop',
       globals: {
         '@capacitor/core': 'capacitorExports',
       },

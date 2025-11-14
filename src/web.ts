@@ -1,14 +1,14 @@
 import { WebPlugin } from '@capacitor/core';
 
 import type {
-  NativeCameraCropPlugin,
+  CapacitorCameraCropPlugin,
   CaptureAndCropOptions,
   CaptureAndCropResult,
 } from './definitions';
 
-export class NativeCameraCropWeb extends WebPlugin implements NativeCameraCropPlugin {
+export class CapacitorCameraCropWeb extends WebPlugin implements CapacitorCameraCropPlugin {
   async captureAndCrop(_options: CaptureAndCropOptions): Promise<CaptureAndCropResult> {
-    throw this.unimplemented('NativeCameraCrop is not supported on the web platform.');
+    throw this.unimplemented('CapacitorCameraCrop is not supported on the web platform.');
   }
 }
 

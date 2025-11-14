@@ -13,7 +13,7 @@
     "android/gradle.properties",
     "dist/",
     "ios/Plugin/",
-    "CapacitorNativeCameraCrop.podspec"
+    "CapacitorCameraCrop.podspec"
   ],
   "author": "Luca Tescari <luca@tescari.dev>",
   "license": "MIT",

@@ -102,7 +102,7 @@ export interface CaptureAndCropResult {
   height: number;
 }
 
-export interface NativeCameraCropPlugin {
+export interface CapacitorCameraCropPlugin {
   /**
    * Capture/select image → optional crop → process → return.
    */

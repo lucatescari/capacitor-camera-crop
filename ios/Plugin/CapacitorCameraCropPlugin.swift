@@ -4,8 +4,8 @@ import UIKit
 import PhotosUI
 import CropViewController
 
-@objc(NativeCameraCropPlugin)
-public class NativeCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate, CropViewControllerDelegate {
+@objc(CapacitorCameraCropPlugin)
+public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate, CropViewControllerDelegate {
     private var call: CAPPluginCall?
     private var pendingImage: UIImage?
     private var blockingOverlay: UIView?

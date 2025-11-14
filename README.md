@@ -74,12 +74,12 @@ Create `android/app/src/main/res/xml/file_paths.xml`:
 ## Usage
 
 ```typescript
-import { NativeCameraCrop } from 'capacitor-camera-crop';
+import { CapacitorCameraCrop } from 'capacitor-camera-crop';
 
 // Open camera with cropping
 async function takePicture() {
   try {
-    const result = await NativeCameraCrop.captureAndCrop({
+    const result = await CapacitorCameraCrop.captureAndCrop({
       source: 'camera',
       enableCropping: true,
       aspectRatio: '1:1',
@@ -97,7 +97,7 @@ async function takePicture() {
 // Open gallery without cropping
 async function selectImage() {
   try {
-    const result = await NativeCameraCrop.captureAndCrop({
+    const result = await CapacitorCameraCrop.captureAndCrop({
       source: 'gallery',
       enableCropping: false,
       resultType: 'uri',
@@ -112,7 +112,7 @@ async function selectImage() {
 // Get base64 encoded image with custom aspect ratio
 async function captureBase64() {
   try {
-    const result = await NativeCameraCrop.captureAndCrop({
+    const result = await CapacitorCameraCrop.captureAndCrop({
       source: 'camera',
       enableCropping: true,
       aspectRatio: { x: 16, y: 9 },
@@ -131,7 +131,7 @@ async function captureBase64() {
 // Use native crop controller (TOCropViewController on iOS, UCrop on Android)
 async function captureWithNativeCropper() {
   try {
-    const result = await NativeCameraCrop.captureAndCrop({
+    const result = await CapacitorCameraCrop.captureAndCrop({
       source: 'camera',
       enableCropping: true,
       nativeCropping: true, // Uses TOCropViewController on iOS, UCrop on Android

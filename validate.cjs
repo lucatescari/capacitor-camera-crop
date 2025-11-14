@@ -46,26 +46,26 @@ check(
 // Check iOS files
 check(
   'iOS Swift implementation',
-  fs.existsSync('ios/Plugin/NativeCameraCropPlugin.swift'),
-  'ios/Plugin/NativeCameraCropPlugin.swift not found'
+  fs.existsSync('ios/Plugin/CapacitorCameraCropPlugin.swift'),
+  'ios/Plugin/CapacitorCameraCropPlugin.swift not found'
 );
 
 check(
   'iOS Objective-C bridge',
-  fs.existsSync('ios/Plugin/NativeCameraCropPlugin.m'),
-  'ios/Plugin/NativeCameraCropPlugin.m not found'
+  fs.existsSync('ios/Plugin/CapacitorCameraCropPlugin.m'),
+  'ios/Plugin/CapacitorCameraCropPlugin.m not found'
 );
 
 check(
   'iOS Podspec',
-  fs.existsSync('CapacitorNativeCameraCrop.podspec'),
-  'CapacitorNativeCameraCrop.podspec not found'
+  fs.existsSync('CapacitorCameraCrop.podspec'),
+  'CapacitorCameraCrop.podspec not found'
 );
 
 // Check Android files
 check(
   'Android Kotlin implementation',
-  fs.existsSync('android/src/main/java/com/example/nativecameracrop/NativeCameraCropPlugin.kt'),
+  fs.existsSync('android/src/main/java/com/example/capacitorcameracrop/CapacitorCameraCropPlugin.kt'),
   'Android plugin not found'
 );
 
