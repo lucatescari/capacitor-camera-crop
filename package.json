@@ -1,6 +1,6 @@
 {
   "name": "capacitor-camera-crop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A Capacitor plugin providing native camera and crop support.",
   "main": "dist/plugin.cjs.js",
