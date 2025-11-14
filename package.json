@@ -1,0 +1,67 @@
+{
+  "name": "capacitor-camera-crop",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A Capacitor plugin providing native camera and crop support.",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "android/build.gradle",
+    "android/src",
+    "android/gradle.properties",
+    "dist/",
+    "ios/Plugin/",
+    "CapacitorNativeCameraCrop.podspec"
+  ],
+  "author": "Luca Tescari <luca@tescari.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lucatescari/capacitor-camera-crop"
+  },
+  "bugs": {
+    "url": "https://github.com/lucatescari/capacitor-camera-crop/issues"
+  },
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native",
+    "camera",
+    "crop"
+  ],
+  "scripts": {
+    "build": "bun run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rimraf ./dist",
+    "watch": "tsc --watch",
+    "validate": "node validate.cjs",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/docgen": "^0.2.2",
+    "@capacitor/ios": "^6.0.0",
+    "@ionic/swiftlint-config": "^1.1.2",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "prettier": "^3.1.0",
+    "prettier-plugin-java": "^2.5.0",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.9.1",
+    "swiftlint": "^1.0.2",
+    "typescript": "^5.6.3"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}
+

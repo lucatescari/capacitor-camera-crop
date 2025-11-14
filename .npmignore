@@ -1,0 +1,57 @@
+# Source files (only dist is needed)
+src/
+example/
+*.ts
+!*.d.ts
+
+# Development files
+.eslintrc.json
+.prettierrc.json
+tsconfig.json
+rollup.config.js
+validate.cjs
+bunfig.toml
+bun.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build outputs (will be rebuilt)
+android/build/
+android/.gradle/
+android/local.properties
+android/.cxx/
+*.iml
+
+# iOS
+ios/build/
+ios/Pods/
+ios/*.xcworkspace
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temp
+.tmp/
+.cache/
+
+# Git
+.git/
+.gitignore
+
+# Documentation (keep these - they're useful for npm)
+# README.md - included
+# CHANGELOG.md - included  
+# LICENSE - included
+
