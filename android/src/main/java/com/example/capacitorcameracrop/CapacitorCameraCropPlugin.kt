@@ -250,6 +250,29 @@ class CapacitorCameraCropPlugin : Plugin() {
 
             val options = UCrop.Options().apply {
                 setCompressionQuality(quality)
+
+                // Configure UCrop UI colors and appearance
+                // Black status bar matching the toolbar
+                setStatusBarColor(android.graphics.Color.parseColor("#000000"))
+                setToolbarColor(android.graphics.Color.parseColor("#000000"))
+                setToolbarWidgetColor(android.graphics.Color.parseColor("#FFFFFF"))
+                setActiveControlsWidgetColor(android.graphics.Color.parseColor("#4CAF50"))
+                setRootViewBackgroundColor(android.graphics.Color.parseColor("#000000"))
+
+                // Set toolbar title
+                setToolbarTitle("Crop Image")
+
+                // Crop frame and grid styling
+                setShowCropFrame(true)
+                setShowCropGrid(true)
+                setCropGridStrokeWidth(2)
+                setCropGridColor(android.graphics.Color.parseColor("#FFFFFF"))
+                setCropFrameStrokeWidth(2)
+                setCropFrameColor(android.graphics.Color.parseColor("#FFFFFF"))
+
+                // Dimmed layer around crop area
+                setDimmedLayerColor(android.graphics.Color.parseColor("#AA000000"))
+
                 if (nativeCropping) {
                     // lock aspect
                     setFreeStyleCropEnabled(false)

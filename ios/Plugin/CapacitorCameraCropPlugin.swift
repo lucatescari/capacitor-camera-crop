@@ -8,7 +8,6 @@ import CropViewController
 public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate, CropViewControllerDelegate {
     private var call: CAPPluginCall?
     private var pendingImage: UIImage?
-    private var blockingOverlay: UIView?
     
     @objc func captureAndCrop(_ call: CAPPluginCall) {
         self.call = call
@@ -82,14 +81,7 @@ public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelega
             call?.reject("No image returned from picker")
             return
         }
-        
-        // Show blocking overlay before dismissing camera if native cropping is enabled
-        let nativeCropping = call?.getBool("nativeCropping") ?? false
-        let enableCropping = call?.getBool("enableCropping") ?? false
-        if nativeCropping && enableCropping {
-            showBlockingOverlay()
-        }
-        
+
         picker.dismiss(animated: true) { [weak self] in
             self?.handleImageSelection(image)
         }
@@ -109,35 +101,26 @@ public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelega
             call?.reject("No image selected")
             return
         }
-        
+
         guard itemProvider.canLoadObject(ofClass: UIImage.self) else {
             picker.dismiss(animated: true, completion: nil)
             call?.reject("Cannot load image")
             return
         }
-        
-        // Show blocking overlay before dismissing picker if native cropping is enabled
-        let nativeCropping = call?.getBool("nativeCropping") ?? false
-        let enableCropping = call?.getBool("enableCropping") ?? false
-        if nativeCropping && enableCropping {
-            showBlockingOverlay()
-        }
-        
+
         picker.dismiss(animated: true, completion: nil)
-        
+
         itemProvider.loadObject(ofClass: UIImage.self) { [weak self] (object, error) in
             if let error = error {
-                self?.hideBlockingOverlay()
                 self?.call?.reject("Error loading image: \(error.localizedDescription)")
                 return
             }
-            
+
             guard let image = object as? UIImage else {
-                self?.hideBlockingOverlay()
                 self?.call?.reject("Could not load image from selection")
                 return
             }
-            
+
             DispatchQueue.main.async {
                 self?.handleImageSelection(image)
             }
@@ -148,58 +131,18 @@ public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelega
     
     private func handleImageSelection(_ image: UIImage) {
         guard let call = self.call else {
-            hideBlockingOverlay()
             return
         }
-        
+
         let nativeCropping = call.getBool("nativeCropping") ?? false
         let enableCropping = call.getBool("enableCropping") ?? false
-        
+
         // If native cropping is enabled, present TOCropViewController
         if nativeCropping && enableCropping {
             presentCropViewController(image: image)
         } else {
-            // Otherwise, process the image directly and hide overlay
-            hideBlockingOverlay()
+            // Otherwise, process the image directly
             processImage(image)
-        }
-    }
-    
-    // MARK: - Blocking Overlay
-    
-    private func showBlockingOverlay() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self,
-                  let window = self.bridge?.viewController?.view.window else {
-                return
-            }
-            
-            // Create blocking overlay - just black screen
-            let overlay = UIView(frame: window.bounds)
-            overlay.backgroundColor = .black
-            overlay.alpha = 0
-            overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            
-            window.addSubview(overlay)
-            self.blockingOverlay = overlay
-            
-            // Fade in
-            UIView.animate(withDuration: 0.2) {
-                overlay.alpha = 1.0
-            }
-        }
-    }
-    
-    private func hideBlockingOverlay() {
-        DispatchQueue.main.async { [weak self] in
-            guard let overlay = self?.blockingOverlay else { return }
-            
-            UIView.animate(withDuration: 0.2, animations: {
-                overlay.alpha = 0
-            }) { _ in
-                overlay.removeFromSuperview()
-                self?.blockingOverlay = nil
-            }
         }
     }
     
@@ -243,15 +186,11 @@ public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelega
         // Present the crop view controller
         DispatchQueue.main.async { [weak self] in
             guard let viewController = self?.bridge?.viewController else {
-                self?.hideBlockingOverlay()
                 call.reject("Unable to present crop view controller")
                 return
             }
-            
-            // Hide blocking overlay when crop view controller appears
-            viewController.present(cropViewController, animated: true) {
-                self?.hideBlockingOverlay()
-            }
+
+            viewController.present(cropViewController, animated: true, completion: nil)
         }
     }
     
@@ -289,8 +228,6 @@ public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelega
             if cancelled {
                 self?.call?.reject("User cancelled the crop operation")
             }
-            // Ensure overlay is removed if still present
-            self?.hideBlockingOverlay()
         }
     }
     
