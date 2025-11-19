@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- UCrop theme: positions toolbar below status bar (critical fix for Android 5.0+) -->
+    <style name="UCropTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Solid black status bar -->
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+
+        <!-- Critical fix: content positioned below status bar, not behind it -->
+        <item name="android:fitsSystemWindows">true</item>
+
+        <!-- Black UI with green accent -->
+        <item name="colorPrimary">@android:color/black</item>
+        <item name="colorPrimaryDark">@android:color/black</item>
+        <item name="colorAccent">#4CAF50</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
