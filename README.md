@@ -191,6 +191,13 @@ bun install
 bun run build
 ```
 
+### Example app
+
+A runnable test harness lives in [`example/`](./example). It installs the
+plugin from the repo root and exercises `captureAndCrop` across every option
+on iOS and Android. See [`example/README.md`](./example/README.md) for setup
+and the acceptance-test matrix.
+
 ## License
 
 MIT

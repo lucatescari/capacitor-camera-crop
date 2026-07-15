@@ -1,0 +1,10 @@
+# Generated native platform folders — regenerate with `npx cap add ios|android`
+/ios/
+/android/
+
+# Dependencies
+/node_modules/
+
+# Misc
+.DS_Store
+*.log

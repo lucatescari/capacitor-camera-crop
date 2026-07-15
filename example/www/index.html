@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Camera Crop Example</title>
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: env(safe-area-inset-top) 1rem 2rem;
+        line-height: 1.4;
+      }
+      h1 { font-size: 1.25rem; margin: 1rem 0 0.25rem; }
+      p.sub { margin: 0 0 1rem; opacity: 0.7; font-size: 0.85rem; }
+      fieldset { border: 1px solid rgba(128,128,128,0.4); border-radius: 8px; margin: 0 0 1rem; padding: 0.75rem; }
+      legend { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+      label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0.2rem 0.75rem 0.2rem 0; font-size: 0.95rem; }
+      select, input[type="number"] { padding: 0.3rem; border-radius: 6px; border: 1px solid rgba(128,128,128,0.5); background: transparent; color: inherit; }
+      .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+      button {
+        appearance: none; border: none; border-radius: 10px;
+        background: #2563eb; color: white; font-size: 1rem; font-weight: 600;
+        padding: 0.85rem 1rem; width: 100%; cursor: pointer;
+      }
+      button:active { opacity: 0.8; }
+      #result { margin-top: 1rem; }
+      #preview { max-width: 100%; border-radius: 10px; display: none; margin-top: 0.75rem; }
+      pre {
+        background: rgba(128,128,128,0.15); border-radius: 8px; padding: 0.75rem;
+        font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; overflow-x: auto;
+      }
+      .ok { color: #16a34a; font-weight: 600; }
+      .err { color: #dc2626; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>capacitor-camera-crop</h1>
+    <p class="sub">Test harness — pick options, tap <em>Capture &amp; Crop</em>, verify the result.</p>
+
+    <fieldset>
+      <legend>Source</legend>
+      <div class="row">
+        <label><input type="radio" name="source" value="camera" checked /> camera</label>
+        <label><input type="radio" name="source" value="gallery" /> gallery</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Cropping</legend>
+      <div class="row">
+        <label><input type="checkbox" id="enableCropping" checked /> enableCropping</label>
+        <label><input type="checkbox" id="nativeCropping" /> nativeCropping</label>
+        <label><input type="checkbox" id="useSystemEditing" checked /> useSystemEditingIfAvailable</label>
+      </div>
+      <div class="row" style="margin-top:0.5rem">
+        <label>aspectRatio
+          <select id="aspectRatio">
+            <option value="free">free</option>
+            <option value="1:1" selected>1:1</option>
+            <option value="4:3">4:3</option>
+            <option value="16:9">16:9</option>
+            <option value="custom">custom (x/y)</option>
+          </select>
+        </label>
+        <label>x <input type="number" id="ratioX" value="16" min="1" style="width:4rem" /></label>
+        <label>y <input type="number" id="ratioY" value="9" min="1" style="width:4rem" /></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Output</legend>
+      <div class="row">
+        <label>resultType
+          <select id="resultType">
+            <option value="uri" selected>uri</option>
+            <option value="base64">base64</option>
+          </select>
+        </label>
+        <label>maxWidth <input type="number" id="width" placeholder="—" min="1" style="width:5rem" /></label>
+        <label>maxHeight <input type="number" id="height" placeholder="—" min="1" style="width:5rem" /></label>
+        <label>quality <input type="number" id="quality" value="90" min="0" max="100" style="width:4rem" /></label>
+      </div>
+    </fieldset>
+
+    <button id="run">Capture &amp; Crop</button>
+
+    <div id="result">
+      <p id="status"></p>
+      <img id="preview" alt="result preview" />
+      <pre id="output"></pre>
+    </div>
+
+    <script>
+      function opts() {
+        const source = document.querySelector('input[name="source"]:checked').value;
+        const aspectSel = document.getElementById('aspectRatio').value;
+        const aspectRatio = aspectSel === 'custom'
+          ? { x: Number(document.getElementById('ratioX').value), y: Number(document.getElementById('ratioY').value) }
+          : aspectSel;
+        const o = {
+          source,
+          enableCropping: document.getElementById('enableCropping').checked,
+          nativeCropping: document.getElementById('nativeCropping').checked,
+          useSystemEditingIfAvailable: document.getElementById('useSystemEditing').checked,
+          aspectRatio,
+          resultType: document.getElementById('resultType').value,
+          quality: Number(document.getElementById('quality').value),
+        };
+        const w = document.getElementById('width').value;
+        const h = document.getElementById('height').value;
+        if (w) o.width = Number(w);
+        if (h) o.height = Number(h);
+        return o;
+      }
+
+      async function run() {
+        const status = document.getElementById('status');
+        const output = document.getElementById('output');
+        const preview = document.getElementById('preview');
+        preview.style.display = 'none';
+        status.textContent = '';
+        const requested = opts();
+        output.textContent = 'Requested options:\n' + JSON.stringify(requested, null, 2);
+
+        const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorCameraCrop;
+        if (!plugin) {
+          status.className = 'err';
+          status.textContent = 'Plugin not found on window.Capacitor.Plugins — run `npx cap sync` and launch on a device/emulator (this page does nothing in a plain browser).';
+          return;
+        }
+
+        try {
+          const result = await plugin.captureAndCrop(requested);
+          status.className = 'ok';
+          status.textContent = '✅ Success — ' + result.width + '×' + result.height + ' ' + result.mimeType;
+          output.textContent =
+            'Requested options:\n' + JSON.stringify(requested, null, 2) +
+            '\n\nResult:\n' + JSON.stringify({ ...result, value: result.value.slice(0, 80) + '…(truncated)' }, null, 2);
+          preview.src = requested.resultType === 'base64'
+            ? 'data:' + result.mimeType + ';base64,' + result.value
+            : result.value;
+          preview.style.display = 'block';
+        } catch (e) {
+          status.className = 'err';
+          status.textContent = '❌ ' + (e && e.message ? e.message : String(e));
+        }
+      }
+
+      document.getElementById('run').addEventListener('click', run);
+    </script>
+  </body>
+</html>
