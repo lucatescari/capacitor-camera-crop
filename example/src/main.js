@@ -2,17 +2,6 @@
 import { CapacitorCameraCrop } from 'capacitor-camera-crop';
 import { Capacitor } from '@capacitor/core';
 
-// Diagnostics: show the platform and whether the native plugin registered.
-(function showDiag() {
-  const diag = document.getElementById('diag');
-  const headers = window.Capacitor?.PluginHeaders ?? [];
-  const registered = headers.some((h) => h.name === 'CapacitorCameraCrop');
-  diag.textContent =
-    'platform: ' + Capacitor.getPlatform() +
-    '\nnative CapacitorCameraCrop registered: ' + (registered ? '✅ yes' : '❌ NO') +
-    '\nall native plugins: ' + (headers.length ? headers.map((h) => h.name).join(', ') : '(none)');
-})();
-
 function readOptions() {
   const source = document.querySelector('input[name="source"]:checked').value;
   const aspectSel = document.getElementById('aspectRatio').value;
@@ -54,8 +43,13 @@ async function run() {
     output.textContent =
       'Requested options:\n' + JSON.stringify(options, null, 2) +
       '\n\nResult:\n' + JSON.stringify({ ...result, value: result.value.slice(0, 80) + '…(truncated)' }, null, 2);
+    // For 'uri' results the value is a file:// path, which a WKWebView/Capacitor
+    // webview cannot load directly — convertFileSrc() rewrites it to a URL the
+    // webview can display. base64 results are shown as a data URI.
     preview.src =
-      options.resultType === 'base64' ? 'data:' + result.mimeType + ';base64,' + result.value : result.value;
+      options.resultType === 'base64'
+        ? 'data:' + result.mimeType + ';base64,' + result.value
+        : Capacitor.convertFileSrc(result.value);
     preview.style.display = 'block';
   } catch (e) {
     status.className = 'err';
