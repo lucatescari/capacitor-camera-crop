@@ -40,27 +40,25 @@ export interface CaptureAndCropOptions {
   resultType?: 'uri' | 'base64';
 
   /**
-   * Maximum width for the output image.
-   * Keeps aspect ratio.
+   * Maximum width (in pixels) for the output image. Aspect ratio is preserved.
+   * May be set independently of `height`; honored on both platforms.
    */
   width?: number;
 
   /**
-   * Maximum height for the output image.
-   * Keeps aspect ratio.
+   * Maximum height (in pixels) for the output image. Aspect ratio is preserved.
+   * May be set independently of `width`; honored on both platforms.
    */
   height?: number;
 
   /**
-   * Use iOS system editing UI if available.
+   * Use the iOS system editing UI when cropping. **iOS only.**
    *
    * - iOS:
-   *    - If true and enableCropping=true: UIImagePicker's built-in editing is used
-   *    - Ignored when nativeCropping=true
-   *
-   * - Android:
-   *    - No system editor. When true:
-   *        enableCropping=true + nativeCropping=false → free cropping mode (UCrop)
+   *    - If true and enableCropping=true: UIImagePicker's built-in editor is used.
+   *    - Ignored when nativeCropping=true.
+   * - Android: no effect. Free-vs-locked cropping is controlled solely by
+   *   `nativeCropping` (uCrop free mode when false, locked when true).
    *
    * @default true
    */

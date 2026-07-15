@@ -31,6 +31,18 @@ npx cap sync
 - iOS 14.0+
 - Android API 23+ (Android 6.0+)
 
+## Platform support
+
+| Platform | Supported | Notes |
+|----------|-----------|-------|
+| iOS | ✅ | UIImagePicker / PHPicker + TOCropViewController |
+| Android | ✅ | `ACTION_IMAGE_CAPTURE` / `ACTION_PICK` + uCrop |
+| Web | ❌ | `captureAndCrop()` rejects with an `unimplemented` error |
+
+Cropping is available on both native platforms. `useSystemEditingIfAvailable`
+affects iOS only (see the options table); on Android, free-vs-locked cropping is
+controlled solely by `nativeCropping`.
+
 ## iOS Setup
 
 Add the following keys to your `Info.plist`:
@@ -180,11 +192,11 @@ Opens the camera or gallery, optionally crops the image, and returns the result.
 | `enableCropping` | `boolean` | `false` | Enable cropping after capturing/selecting |
 | `aspectRatio` | `'free' \| '1:1' \| '4:3' \| '16:9' \| { x: number; y: number }` | `'free'` | Aspect ratio for cropping |
 | `resultType` | `'uri' \| 'base64'` | `'uri'` | Result type: file URI or base64 encoded string |
-| `width` | `number` | - | Maximum width for the output image |
-| `height` | `number` | - | Maximum height for the output image |
-| `quality` | `number` | `90` | JPEG quality (0-100) |
-| `useSystemEditingIfAvailable` | `boolean` | `true` | Use iOS system editing UI if available (ignored when `nativeCropping=true`) |
-| `nativeCropping` | `boolean` | `false` | Use native crop controller (TOCropViewController on iOS, locked aspect UCrop on Android). Overrides `useSystemEditingIfAvailable` on iOS |
+| `width` | `number` | - | Maximum width (px) for the output image. Honored on both platforms; may be set independently of `height` |
+| `height` | `number` | - | Maximum height (px) for the output image. Honored on both platforms; may be set independently of `width` |
+| `quality` | `number` | `90` | JPEG quality (clamped to 0-100) |
+| `useSystemEditingIfAvailable` | `boolean` | `true` | **iOS only.** Use the built-in UIImagePicker editor when cropping. Ignored when `nativeCropping=true`. Has no effect on Android (free-vs-locked is controlled by `nativeCropping`) |
+| `nativeCropping` | `boolean` | `false` | Use the native crop controller (TOCropViewController on iOS, locked-aspect uCrop on Android). Overrides `useSystemEditingIfAvailable` on iOS |
 
 #### CaptureAndCropResult
 
