@@ -2,13 +2,13 @@
   "name": "capacitor-camera-crop-example",
   "version": "1.0.0",
   "private": true,
-  "description": "Runnable test harness for the capacitor-camera-crop plugin (Capacitor 8).",
+  "description": "Runnable test harness for the capacitor-camera-crop plugin (Capacitor 8, Vite).",
   "scripts": {
-    "sync": "cap sync",
-    "add:ios": "cap add ios",
-    "add:android": "cap add android",
-    "run:ios": "cap run ios",
-    "run:android": "cap run android"
+    "dev": "vite",
+    "build": "vite build",
+    "sync": "npm run build && cap sync",
+    "run:ios": "npm run build && cap sync ios && cap run ios",
+    "run:android": "npm run build && cap sync android && cap run android"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
@@ -17,6 +17,7 @@
     "capacitor-camera-crop": "file:.."
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.0.0"
+    "@capacitor/cli": "^8.0.0",
+    "vite": "^5.0.0"
   }
 }

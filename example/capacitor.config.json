@@ -1,5 +1,5 @@
 {
   "appId": "dev.tescari.cameracropexample",
   "appName": "Camera Crop Example",
-  "webDir": "www"
+  "webDir": "dist"
 }

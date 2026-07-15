@@ -39,7 +39,7 @@
   <body>
     <h1>capacitor-camera-crop</h1>
     <p class="sub">Test harness — pick options, tap <em>Capture &amp; Crop</em>, verify the result.</p>
-    <pre id="diag">Loading Capacitor…</pre>
+    <pre id="diag">Loading…</pre>
 
     <fieldset>
       <legend>Source</legend>
@@ -94,90 +94,6 @@
       <pre id="output"></pre>
     </div>
 
-    <script>
-      function opts() {
-        const source = document.querySelector('input[name="source"]:checked').value;
-        const aspectSel = document.getElementById('aspectRatio').value;
-        const aspectRatio = aspectSel === 'custom'
-          ? { x: Number(document.getElementById('ratioX').value), y: Number(document.getElementById('ratioY').value) }
-          : aspectSel;
-        const o = {
-          source,
-          enableCropping: document.getElementById('enableCropping').checked,
-          nativeCropping: document.getElementById('nativeCropping').checked,
-          useSystemEditingIfAvailable: document.getElementById('useSystemEditing').checked,
-          aspectRatio,
-          resultType: document.getElementById('resultType').value,
-          quality: Number(document.getElementById('quality').value),
-        };
-        const w = document.getElementById('width').value;
-        const h = document.getElementById('height').value;
-        if (w) o.width = Number(w);
-        if (h) o.height = Number(h);
-        return o;
-      }
-
-      // Acquire the plugin the correct way for a no-bundler app: registerPlugin()
-      // builds a proxy that bridges to the native plugin by name. Accessing
-      // window.Capacitor.Plugins.X does NOT work here — that object is only
-      // populated when a bundled app imports the plugin package.
-      const cap = window.Capacitor;
-      const plugin = cap && typeof cap.registerPlugin === 'function'
-        ? cap.registerPlugin('CapacitorCameraCrop')
-        : null;
-
-      // Diagnostics: show platform and which native plugins the bridge registered.
-      // If "CapacitorCameraCrop" is missing from PluginHeaders on a device, the
-      // NATIVE plugin failed to register (rebuild / check pod). If it's present,
-      // the bridge is healthy.
-      (function showDiag() {
-        const diag = document.getElementById('diag');
-        if (!cap) {
-          diag.textContent = 'window.Capacitor not found — this page only works inside a Capacitor app (npx cap run ios|android), not a plain browser.';
-          return;
-        }
-        const headers = cap.PluginHeaders || [];
-        const names = headers.map(h => h.name);
-        const registered = names.includes('CapacitorCameraCrop');
-        diag.textContent =
-          'platform: ' + (cap.getPlatform ? cap.getPlatform() : '?') +
-          '\nnative CapacitorCameraCrop registered: ' + (registered ? '✅ yes' : '❌ NO — native plugin not found in bridge') +
-          '\nall native plugins: ' + (names.length ? names.join(', ') : '(none reported)');
-      })();
-
-      async function run() {
-        const status = document.getElementById('status');
-        const output = document.getElementById('output');
-        const preview = document.getElementById('preview');
-        preview.style.display = 'none';
-        status.textContent = '';
-        const requested = opts();
-        output.textContent = 'Requested options:\n' + JSON.stringify(requested, null, 2);
-
-        if (!plugin) {
-          status.className = 'err';
-          status.textContent = 'window.Capacitor.registerPlugin unavailable — launch inside a Capacitor app on a device/emulator (this page does nothing in a plain browser).';
-          return;
-        }
-
-        try {
-          const result = await plugin.captureAndCrop(requested);
-          status.className = 'ok';
-          status.textContent = '✅ Success — ' + result.width + '×' + result.height + ' ' + result.mimeType;
-          output.textContent =
-            'Requested options:\n' + JSON.stringify(requested, null, 2) +
-            '\n\nResult:\n' + JSON.stringify({ ...result, value: result.value.slice(0, 80) + '…(truncated)' }, null, 2);
-          preview.src = requested.resultType === 'base64'
-            ? 'data:' + result.mimeType + ';base64,' + result.value
-            : result.value;
-          preview.style.display = 'block';
-        } catch (e) {
-          status.className = 'err';
-          status.textContent = '❌ ' + (e && e.message ? e.message : String(e));
-        }
-      }
-
-      document.getElementById('run').addEventListener('click', run);
-    </script>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

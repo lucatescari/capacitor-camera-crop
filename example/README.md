@@ -1,42 +1,47 @@
-# capacitor-camera-crop — Example / Test Harness
+# capacitor-camera-crop — Example App
 
-A minimal, runnable Capacitor app that installs the plugin from the parent
-directory (`file:..`) and exercises `captureAndCrop` across every option
-(source, cropping mode, aspect ratio, output type). Use it to verify plugin
-changes on a real device or emulator/simulator.
+A **normal Capacitor app** (Vite + vanilla JS) that consumes the plugin exactly
+the way real users will:
 
-Defaults to **Capacitor 8**. See [Testing against Capacitor 7](#testing-against-capacitor-7) to switch.
+```js
+import { CapacitorCameraCrop } from 'capacitor-camera-crop';
+
+const result = await CapacitorCameraCrop.captureAndCrop({ source: 'camera', enableCropping: true });
+```
+
+Use it to verify plugin changes on a device or simulator/emulator. It targets
+**Capacitor 8** (iOS uses Swift Package Manager). See
+[Testing against Capacitor 7](#testing-against-capacitor-7) to switch.
 
 ## Prerequisites
 
 - Node 22+ and npm
 - iOS: Xcode 26+ (Capacitor 8 uses Swift Package Manager — no CocoaPods needed)
-- Android: Android Studio (Otter or newer) + an emulator or a connected device, JDK 21
+- Android: Android Studio (Otter or newer) + an emulator or device, JDK 21
 
 ## Setup
 
 From this `example/` directory:
 
 ```bash
-# 1. Build the plugin so example picks up fresh dist/ (run in the repo root)
+# 1. Build the plugin in the repo root so the example picks up fresh dist/
 cd .. && bun run build && cd example
 
-# 2. Install deps (links the plugin via file:..)
+# 2. Install deps (links the plugin via file:.. and installs Vite)
 npm install
 
-# 3. Add the native platforms (generates ios/ and android/, which are gitignored)
+# 3. Build the web app (Vite → dist/)
+npm run build
+
+# 4. Add the native platforms (generated, gitignored)
 npx cap add ios
 npx cap add android
 
-# 4. Copy web assets + native config into the platforms
+# 5. Copy the web build + native config into the platforms
 npx cap sync
 ```
 
-> After changing plugin source, re-run `cd .. && bun run build && cd example && npm install && npx cap sync` to pull the update into the platforms.
-
 ## Native permissions (one-time, after `cap add`)
-
-The generated platform projects need the plugin's permissions wired up.
 
 ### iOS — `ios/App/App/Info.plist`
 
@@ -51,14 +56,14 @@ The generated platform projects need the plugin's permissions wired up.
 
 ### Android — `android/app/src/main/AndroidManifest.xml`
 
-Add the permissions above the `<application>` tag:
+Add above `<application>`:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 ```
 
-Add the FileProvider inside `<application>`:
+Add inside `<application>`:
 
 ```xml
 <provider
@@ -84,13 +89,17 @@ Create `android/app/src/main/res/xml/file_paths.xml`:
 
 ## Run
 
+`npm run run:ios` / `npm run run:android` rebuild the web app, sync, and launch:
+
 ```bash
-npx cap run ios        # pick a simulator or device
-npx cap run android    # pick an emulator or device
+npm run run:ios       # = vite build + cap sync ios + cap run ios
+npm run run:android   # = vite build + cap sync android + cap run android
 ```
 
-Then in the app: choose options and tap **Capture & Crop**. The result panel
-shows the returned dimensions, mime type, and a preview.
+On iOS, the first build resolves Swift packages (capacitor-swift-pm +
+TOCropViewController) — let Xcode finish that once.
+
+> **After editing plugin source:** `cd .. && bun run build && cd example && npm run build && npx cap sync`.
 
 ## What to test (acceptance matrix)
 
@@ -100,46 +109,23 @@ Exercise each combination on **both** platforms:
 - **enableCropping:** on, off
 - **aspectRatio:** `free`, `1:1`, `4:3`, `16:9`, custom `{x,y}`
 - **resultType:** `uri`, `base64`
-- Optionally `nativeCropping` on/off (UCrop / TOCropViewController), and `width`/`height` resize caps
+- Optionally `nativeCropping` on/off, and `width`/`height` resize caps
 
-> The camera source requires a physical device (simulators/emulators have no
-> real camera). Gallery + crop paths work on simulator/emulator.
-
-## Diagnostics & troubleshooting
-
-The page shows a diagnostics line at the top:
-
-```
-platform: ios
-native CapacitorCameraCrop registered: ✅ yes
-all native plugins: CapacitorCookies, CapacitorHttp, WebView, CapacitorCameraCrop
-```
-
-- **`native CapacitorCameraCrop registered: ✅ yes`** → the native plugin is wired
-  up correctly; any failure is in the call itself.
-- **`❌ NO`** → the native plugin did not register with the bridge. Re-run
-  `cd .. && bun run build && cd example && npm install && npx cap sync`. On iOS
-  (SPM), open the project in Xcode and let it resolve Swift packages (File →
-  Packages → Resolve), then clean-build. Confirm the plugin is listed under the
-  app's Swift Package dependencies.
-
-> **Note on access pattern:** this build-free harness calls
-> `window.Capacitor.registerPlugin('CapacitorCameraCrop')` to reach the plugin.
-> `window.Capacitor.Plugins.CapacitorCameraCrop` is **not** populated in a
-> no-bundler app (that object is only filled when a bundled app `import`s the
-> plugin package), so don't rely on it here.
+The diagnostics line at the top shows the platform and whether the native plugin
+registered. `camera` requires a physical device; gallery + crop work on
+simulator/emulator.
 
 ## Testing against Capacitor 7
 
-The plugin supports `^7.0.0 || ^8.0.0`. To verify the Cap 7 path, temporarily
-downgrade this example (do not commit the change):
+The plugin supports `^7.0.0 || ^8.0.0`. To verify the Cap 7 path (don't commit it):
 
 ```bash
 npm install @capacitor/core@^7 @capacitor/cli@^7 @capacitor/ios@^7 @capacitor/android@^7
-# remove and re-add platforms so the native templates match Cap 7
 rm -rf ios android
+npm run build
 npx cap add ios && npx cap add android && npx cap sync
-# re-apply the native permissions above, then run
+# re-apply the native permissions above, then: npm run run:ios / run:android
 ```
 
-To return to Cap 8: `npm install @capacitor/core@^8 @capacitor/cli@^8 @capacitor/ios@^8 @capacitor/android@^8` and regenerate platforms.
+`cap sync` automatically adjusts the plugin's `Package.swift` capacitor-swift-pm
+version to match Capacitor 7, so no manual plugin edits are needed.
