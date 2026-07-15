@@ -4,12 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -20,7 +22,6 @@ import com.yalantis.ucrop.UCrop
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 
 @CapacitorPlugin(
     name = "CapacitorCameraCrop"
@@ -29,6 +30,10 @@ class CapacitorCameraCropPlugin : Plugin() {
 
     companion object {
         private const val TAG = "CapacitorCameraCrop"
+
+        // Safety cap for decoding when the caller doesn't request a size, to avoid
+        // OutOfMemoryError on very high-resolution sensors while keeping high quality.
+        private const val MAX_DIMENSION = 4096
     }
 
     // Single pending camera URI (for ACTION_IMAGE_CAPTURE output)
@@ -37,28 +42,13 @@ class CapacitorCameraCropPlugin : Plugin() {
     // --------------------------------------------------
     // Entry from JavaScript
     // --------------------------------------------------
+    // Cropping behavior (aligned with iOS flags):
+    //   enableCropping = false                      -> no crop, return raw image
+    //   enableCropping = true & nativeCropping=true -> UCrop with locked aspect ratio
+    //   enableCropping = true & nativeCropping=false-> UCrop free-style cropping
     @PluginMethod
     fun captureAndCrop(call: PluginCall) {
         val source = call.getString("source") ?: "camera"
-        val enableCropping = call.getBoolean("enableCropping") ?: false
-        val nativeCropping = call.getBoolean("nativeCropping") ?: false
-        val useSystemEditing = call.getBoolean("useSystemEditingIfAvailable") ?: true
-        val resultType = call.getString("resultType") ?: "uri"
-        val quality = call.getInt("quality") ?: 90
-
-        Log.d(TAG, "captureAndCrop: source=$source, enableCropping=$enableCropping, nativeCropping=$nativeCropping, useSystemEditingIfAvailable=$useSystemEditing")
-        Log.d(TAG, "captureAndCrop: resultType=$resultType, quality=$quality")
-        Log.d(TAG, "PLUGIN VERSION ANDROID ALIGNED 1.0.0")
-
-        // NOTE:
-        // - Android has no true "system editing" crop like iOS UIImagePicker.
-        // - We interpret:
-        //   * enableCropping = false      -> no crop, return raw image
-        //   * enableCropping = true &
-        //     nativeCropping = true       -> UCrop with locked aspect ratio (similar to TOCropViewController)
-        //   * enableCropping = true &
-        //     nativeCropping = false      -> UCrop with free-style cropping (behaves like "system editing" on iOS)
-
         if (source == "gallery") {
             openGallery(call)
         } else {
@@ -71,18 +61,12 @@ class CapacitorCameraCropPlugin : Plugin() {
     // --------------------------------------------------
     private fun openCamera(call: PluginCall) {
         try {
-            Log.d(TAG, "openCamera: START - callId=${call.callbackId}, thread=${Thread.currentThread().name}")
-
             val tempFile = File.createTempFile("cap_photo_", ".jpg", context.cacheDir)
-            Log.d(TAG, "openCamera: tempFile created=${tempFile.absolutePath}")
-
             val imageUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 tempFile
             )
-            Log.d(TAG, "openCamera: imageUri=$imageUri")
-
             cameraImageUri = imageUri
 
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
@@ -90,20 +74,9 @@ class CapacitorCameraCropPlugin : Plugin() {
                 addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            Log.d(TAG, "openCamera: intent created, about to call startActivityForResult")
-
-            try {
-                Log.d(TAG, "openCamera: calling startActivityForResult - callId=${call.callbackId}")
-                // Modern pattern: use ActivityCallback name
-                startActivityForResult(call, intent, "onCameraResult")
-                Log.d(TAG, "openCamera: startActivityForResult returned successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "openCamera: Exception in startActivityForResult", e)
-                e.printStackTrace()
-                throw e
-            }
+            startActivityForResult(call, intent, "onCameraResult")
         } catch (e: Exception) {
-            Log.e(TAG, "openCamera: Failed to open camera", e)
+            Log.e(TAG, "Failed to open camera", e)
             cameraImageUri = null
             call.reject("Failed to open camera: ${e.message}", e)
         }
@@ -114,24 +87,12 @@ class CapacitorCameraCropPlugin : Plugin() {
     // --------------------------------------------------
     private fun openGallery(call: PluginCall) {
         try {
-            Log.d(TAG, "openGallery: START - callId=${call.callbackId}, thread=${Thread.currentThread().name}")
-
             val intent = Intent(Intent.ACTION_PICK).apply {
                 setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
             }
-            Log.d(TAG, "openGallery: intent created, about to call startActivityForResult")
-
-            try {
-                Log.d(TAG, "openGallery: calling startActivityForResult - callId=${call.callbackId}")
-                startActivityForResult(call, intent, "onGalleryResult")
-                Log.d(TAG, "openGallery: startActivityForResult returned successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "openGallery: Exception in startActivityForResult", e)
-                e.printStackTrace()
-                throw e
-            }
+            startActivityForResult(call, intent, "onGalleryResult")
         } catch (e: Exception) {
-            Log.e(TAG, "openGallery: Failed to open gallery", e)
+            Log.e(TAG, "Failed to open gallery", e)
             call.reject("Failed to open gallery: ${e.message}", e)
         }
     }
@@ -143,32 +104,27 @@ class CapacitorCameraCropPlugin : Plugin() {
     @ActivityCallback
     private fun onCameraResult(call: PluginCall?, result: ActivityResult) {
         if (call == null) {
-            Log.e(TAG, "onCameraResult: call is null")
             cameraImageUri = null
             return
         }
 
         if (result.resultCode != Activity.RESULT_OK) {
-            Log.d(TAG, "onCameraResult: user cancelled or result not OK (${result.resultCode})")
             cameraImageUri = null
             call.reject("User cancelled")
             return
         }
 
         val uri = cameraImageUri
+        cameraImageUri = null
         if (uri == null) {
-            Log.e(TAG, "onCameraResult: Missing cameraImageUri")
             call.reject("Missing temp photo URI")
             return
         }
-
-        Log.d(TAG, "onCameraResult: uri=$uri")
 
         val enableCropping = call.getBoolean("enableCropping") ?: false
         if (enableCropping) {
             startCrop(call, uri)
         } else {
-            cameraImageUri = null
             processAndFinish(call, uri)
         }
     }
@@ -176,20 +132,16 @@ class CapacitorCameraCropPlugin : Plugin() {
     @ActivityCallback
     private fun onGalleryResult(call: PluginCall?, result: ActivityResult) {
         if (call == null) {
-            Log.e(TAG, "onGalleryResult: call is null")
             return
         }
 
         if (result.resultCode != Activity.RESULT_OK) {
-            Log.d(TAG, "onGalleryResult: user cancelled or result not OK (${result.resultCode})")
             call.reject("User cancelled")
             return
         }
 
-        val dataIntent = result.data
-        val uri = dataIntent?.data
+        val uri = result.data?.data
         if (uri == null) {
-            Log.e(TAG, "onGalleryResult: No image selected from gallery")
             call.reject("No image selected")
             return
         }
@@ -205,27 +157,22 @@ class CapacitorCameraCropPlugin : Plugin() {
     @ActivityCallback
     private fun onCropResult(call: PluginCall?, result: ActivityResult) {
         if (call == null) {
-            Log.e(TAG, "onCropResult: call is null")
             return
         }
 
         if (result.resultCode != Activity.RESULT_OK) {
-            Log.d(TAG, "onCropResult: result not OK (${result.resultCode})")
-            // UCrop sometimes returns errors via getError; you could surface that if you want
             call.reject("Crop cancelled or failed")
             return
         }
 
         val data = result.data
         if (data == null) {
-            Log.e(TAG, "onCropResult: Crop result intent is null")
             call.reject("Crop failed: no data")
             return
         }
 
         val uri = UCrop.getOutput(data)
         if (uri == null) {
-            Log.e(TAG, "onCropResult: Crop failed, output URI is null")
             call.reject("Crop failed")
             return
         }
@@ -241,44 +188,33 @@ class CapacitorCameraCropPlugin : Plugin() {
             val destFile = File(context.cacheDir, "crop_${System.currentTimeMillis()}.jpg")
             val destUri = Uri.fromFile(destFile)
 
-            val quality = call.getInt("quality") ?: 90
-            val enableCropping = call.getBoolean("enableCropping") ?: false
+            val quality = (call.getInt("quality") ?: 90).coerceIn(0, 100)
             val nativeCropping = call.getBoolean("nativeCropping") ?: false
-            val useSystemEditing = call.getBoolean("useSystemEditingIfAvailable") ?: true
-
-            Log.d(TAG, "startCrop: enableCropping=$enableCropping, nativeCropping=$nativeCropping, useSystemEditingIfAvailable=$useSystemEditing")
 
             val options = UCrop.Options().apply {
                 setCompressionQuality(quality)
 
-                // Configure UCrop UI colors and appearance
-                // Black status bar matching the toolbar
+                // UCrop UI colors and appearance (black toolbar to match input/crop transition).
                 setStatusBarColor(android.graphics.Color.parseColor("#000000"))
                 setToolbarColor(android.graphics.Color.parseColor("#000000"))
                 setToolbarWidgetColor(android.graphics.Color.parseColor("#FFFFFF"))
                 setActiveControlsWidgetColor(android.graphics.Color.parseColor("#4CAF50"))
                 setRootViewBackgroundColor(android.graphics.Color.parseColor("#000000"))
-
-                // Set toolbar title
                 setToolbarTitle("Crop Image")
-
-                // Crop frame and grid styling
                 setShowCropFrame(true)
                 setShowCropGrid(true)
                 setCropGridStrokeWidth(2)
                 setCropGridColor(android.graphics.Color.parseColor("#FFFFFF"))
                 setCropFrameStrokeWidth(2)
                 setCropFrameColor(android.graphics.Color.parseColor("#FFFFFF"))
-
-                // Dimmed layer around crop area
                 setDimmedLayerColor(android.graphics.Color.parseColor("#AA000000"))
 
                 if (nativeCropping) {
-                    // lock aspect
+                    // Locked aspect ratio (similar to iOS TOCropViewController).
                     setFreeStyleCropEnabled(false)
                     setHideBottomControls(true)
                 } else {
-                    // free-style cropping
+                    // Free-style cropping (behaves like iOS "system editing").
                     setFreeStyleCropEnabled(true)
                     setHideBottomControls(false)
                 }
@@ -286,25 +222,16 @@ class CapacitorCameraCropPlugin : Plugin() {
 
             val uCrop = UCrop.of(sourceUri, destUri).withOptions(options)
 
-            // Aspect ratio handling
             configureAspectRatio(call, uCrop, nativeCropping, sourceUri)
 
-            // Max result size
+            // Max result size — honor either dimension alone (parity with iOS resize).
             val w = call.getInt("width")
             val h = call.getInt("height")
-            if (w != null && h != null) {
-                uCrop.withMaxResultSize(w, h)
+            if (w != null || h != null) {
+                uCrop.withMaxResultSize(w ?: MAX_DIMENSION, h ?: MAX_DIMENSION)
             }
 
-            Log.d(TAG, "startCrop: about to call startActivityForResult - callId=${call.callbackId}")
-            try {
-                startActivityForResult(call, uCrop.getIntent(context), "onCropResult")
-                Log.d(TAG, "startCrop: startActivityForResult returned successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "startCrop: Exception in startActivityForResult", e)
-                e.printStackTrace()
-                throw e
-            }
+            startActivityForResult(call, uCrop.getIntent(context), "onCropResult")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start crop", e)
             call.reject("Failed to start crop: ${e.message}", e)
@@ -315,9 +242,8 @@ class CapacitorCameraCropPlugin : Plugin() {
      * Configure aspect ratio:
      * - aspectRatio: "free" | "1:1" | "4:3" | "16:9"
      * - aspectRatio: { x: number, y: number } (custom)
-     * Behavior:
-     * - If nativeCropping = true   -> apply fixed aspect ratio (locked)
-     * - If nativeCropping = false  -> we allow free-style; we don't force ratio
+     * Only applied when nativeCropping = true (locked). In free-style mode the user
+     * crops freely and no ratio is forced.
      */
     private fun configureAspectRatio(
         call: PluginCall,
@@ -326,8 +252,6 @@ class CapacitorCameraCropPlugin : Plugin() {
         sourceUri: Uri
     ) {
         if (!nativeCropping) {
-            // Free-style mode: like iOS "system editing" – user can crop freely.
-            Log.d(TAG, "configureAspectRatio: nativeCropping=false (free style crop)")
             return
         }
 
@@ -346,45 +270,19 @@ class CapacitorCameraCropPlugin : Plugin() {
                     customY = yVal.toFloat()
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "configureAspectRatio: Failed to parse aspectRatio object", e)
+                Log.w(TAG, "Failed to parse aspectRatio object", e)
             }
         }
 
         when {
-            customX != null && customY != null && customY > 0f -> {
-                Log.d(TAG, "configureAspectRatio: using custom aspect ${customX}:${customY}")
-                uCrop.withAspectRatio(customX, customY)
-            }
-
-            aspectString == "1:1" -> {
-                Log.d(TAG, "configureAspectRatio: preset 1:1")
-                uCrop.withAspectRatio(1f, 1f)
-            }
-
-            aspectString == "4:3" -> {
-                Log.d(TAG, "configureAspectRatio: preset 4:3")
-                uCrop.withAspectRatio(4f, 3f)
-            }
-
-            aspectString == "16:9" -> {
-                Log.d(TAG, "configureAspectRatio: preset 16:9")
-                uCrop.withAspectRatio(16f, 9f)
-            }
-
-            aspectString == "free" || aspectString == null -> {
-                val (w, h) = getImageDimensions(sourceUri)
-                if (w > 0 && h > 0) {
-                    Log.d(TAG, "configureAspectRatio: original aspect ${w}:${h}")
-                    uCrop.withAspectRatio(w.toFloat(), h.toFloat())
-                } else {
-                    Log.d(TAG, "configureAspectRatio: failed to read original size; using UCrop default")
-                }
-            }
-
+            customX != null && customY != null && customY > 0f -> uCrop.withAspectRatio(customX, customY)
+            aspectString == "1:1" -> uCrop.withAspectRatio(1f, 1f)
+            aspectString == "4:3" -> uCrop.withAspectRatio(4f, 3f)
+            aspectString == "16:9" -> uCrop.withAspectRatio(16f, 9f)
             else -> {
+                // "free"/null/unknown -> use the source image's own aspect ratio.
                 val (w, h) = getImageDimensions(sourceUri)
                 if (w > 0 && h > 0) {
-                    Log.d(TAG, "configureAspectRatio: unknown aspect=$aspectString, using original ${w}:${h}")
                     uCrop.withAspectRatio(w.toFloat(), h.toFloat())
                 }
             }
@@ -395,52 +293,126 @@ class CapacitorCameraCropPlugin : Plugin() {
     // Final Image Processing
     // --------------------------------------------------
     private fun processAndFinish(call: PluginCall, uri: Uri) {
-        val bitmap = loadBitmap(uri)
+        val maxW = call.getInt("width")
+        val maxH = call.getInt("height")
+
+        val bitmap = loadBitmap(uri, maxW, maxH)
         if (bitmap == null) {
-            Log.e(TAG, "Failed to decode image from $uri")
             call.reject("Failed to decode image")
             return
         }
 
-        var finalBitmap = bitmap
-
-        val maxW = call.getInt("width")
-        val maxH = call.getInt("height")
-
-        if (maxW != null || maxH != null) {
-            finalBitmap = resizeBitmap(bitmap, maxW, maxH)
-        }
+        val finalBitmap = if (maxW != null || maxH != null) resizeBitmap(bitmap, maxW, maxH) else bitmap
 
         val result = JSObject()
         val resultType = call.getString("resultType") ?: "uri"
-        val quality = call.getInt("quality") ?: 90
+        val quality = (call.getInt("quality") ?: 90).coerceIn(0, 100)
 
-        if (resultType == "base64") {
-            result.put("value", bitmapToBase64(finalBitmap, quality))
-        } else {
-            val file = File(context.cacheDir, "final_${System.currentTimeMillis()}.jpg")
-            saveBitmap(finalBitmap, file, quality)
-            result.put("value", Uri.fromFile(file).toString())
+        try {
+            if (resultType == "base64") {
+                result.put("value", bitmapToBase64(finalBitmap, quality))
+            } else {
+                val file = File(context.cacheDir, "final_${System.currentTimeMillis()}.jpg")
+                saveBitmap(finalBitmap, file, quality)
+                result.put("value", Uri.fromFile(file).toString())
+            }
+
+            result.put("width", finalBitmap.width)
+            result.put("height", finalBitmap.height)
+            result.put("mimeType", "image/jpeg")
+            call.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to process image", e)
+            call.reject("Failed to process image: ${e.message}", e)
+        } finally {
+            // Recycle the original once a distinct scaled bitmap replaced it.
+            if (finalBitmap != bitmap) {
+                bitmap.recycle()
+            }
         }
-
-        result.put("width", finalBitmap.width)
-        result.put("height", finalBitmap.height)
-        result.put("mimeType", "image/jpeg")
-
-        Log.d(TAG, "processAndFinish: width=${finalBitmap.width}, height=${finalBitmap.height}")
-        call.resolve(result)
     }
 
     // --------------------------------------------------
     // Helper Functions
     // --------------------------------------------------
-    private fun loadBitmap(uri: Uri): Bitmap? {
+
+    /**
+     * Decode a bitmap with downsampling (to avoid OOM) and correct EXIF orientation.
+     */
+    private fun loadBitmap(uri: Uri, reqWidth: Int?, reqHeight: Int?): Bitmap? {
         return try {
-            val stream = context.contentResolver.openInputStream(uri) ?: return null
-            BitmapFactory.decodeStream(stream).also { stream.close() }
+            // 1. Bounds-only pass to read source dimensions.
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, bounds)
+            } ?: return null
+
+            // 2. Downsampled decode.
+            val opts = BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, reqWidth, reqHeight)
+            }
+            val decoded = context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, opts)
+            } ?: return null
+
+            // 3. Apply EXIF orientation so photos aren't returned sideways.
+            applyExifOrientation(uri, decoded)
         } catch (e: Exception) {
             Log.e(TAG, "Error loading bitmap from $uri", e)
             null
+        }
+    }
+
+    private fun calculateInSampleSize(srcWidth: Int, srcHeight: Int, reqWidth: Int?, reqHeight: Int?): Int {
+        val targetW = reqWidth ?: MAX_DIMENSION
+        val targetH = reqHeight ?: MAX_DIMENSION
+        var inSampleSize = 1
+        if (srcWidth <= 0 || srcHeight <= 0) return inSampleSize
+        if (srcHeight > targetH || srcWidth > targetW) {
+            val halfHeight = srcHeight / 2
+            val halfWidth = srcWidth / 2
+            while ((halfHeight / inSampleSize) >= targetH && (halfWidth / inSampleSize) >= targetW) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    private fun applyExifOrientation(uri: Uri, bitmap: Bitmap): Bitmap {
+        return try {
+            val orientation = context.contentResolver.openInputStream(uri)?.use { stream ->
+                ExifInterface(stream).getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
+                )
+            } ?: ExifInterface.ORIENTATION_NORMAL
+
+            val matrix = Matrix()
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+                ExifInterface.ORIENTATION_TRANSPOSE -> {
+                    matrix.postRotate(90f)
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_TRANSVERSE -> {
+                    matrix.postRotate(270f)
+                    matrix.postScale(-1f, 1f)
+                }
+                else -> return bitmap
+            }
+
+            val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            if (rotated != bitmap) {
+                bitmap.recycle()
+            }
+            rotated
+        } catch (e: Exception) {
+            Log.e(TAG, "applyExifOrientation failed for $uri", e)
+            bitmap
         }
     }
 
@@ -477,26 +449,18 @@ class CapacitorCameraCropPlugin : Plugin() {
     }
 
     /**
-     * Read image dimensions without loading full bitmap into memory.
+     * Read image dimensions without loading the full bitmap into memory.
      */
     private fun getImageDimensions(uri: Uri): Pair<Int, Int> {
-        var inputStream: InputStream? = null
         return try {
-            val options = BitmapFactory.Options().apply {
-                inJustDecodeBounds = true
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, options)
             }
-            inputStream = context.contentResolver.openInputStream(uri)
-            BitmapFactory.decodeStream(inputStream, null, options)
             Pair(options.outWidth, options.outHeight)
         } catch (e: Exception) {
-            Log.w(TAG, "getImageDimensions: failed for $uri", e)
+            Log.w(TAG, "getImageDimensions failed for $uri", e)
             Pair(0, 0)
-        } finally {
-            try {
-                inputStream?.close()
-            } catch (_: Exception) {
-            }
         }
     }
 }
-
