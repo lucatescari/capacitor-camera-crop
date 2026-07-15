@@ -341,17 +341,19 @@ class CapacitorCameraCropPlugin : Plugin() {
      */
     private fun loadBitmap(uri: Uri, reqWidth: Int?, reqHeight: Int?): Bitmap? {
         return try {
-            // 1. Bounds-only pass to read source dimensions.
+            // 1. Bounds-only pass to read source dimensions. decodeStream returns
+            //    null here by design (inJustDecodeBounds), so guard the STREAM, not
+            //    the decode result, and ignore the null return.
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(uri)?.use {
+            (context.contentResolver.openInputStream(uri) ?: return null).use {
                 BitmapFactory.decodeStream(it, null, bounds)
-            } ?: return null
+            }
 
-            // 2. Downsampled decode.
+            // 2. Downsampled decode (this one really returns the bitmap).
             val opts = BitmapFactory.Options().apply {
                 inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, reqWidth, reqHeight)
             }
-            val decoded = context.contentResolver.openInputStream(uri)?.use {
+            val decoded = (context.contentResolver.openInputStream(uri) ?: return null).use {
                 BitmapFactory.decodeStream(it, null, opts)
             } ?: return null
 
