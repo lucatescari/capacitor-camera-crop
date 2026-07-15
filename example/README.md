@@ -10,7 +10,7 @@ Defaults to **Capacitor 8**. See [Testing against Capacitor 7](#testing-against-
 ## Prerequisites
 
 - Node 22+ and npm
-- iOS: Xcode 26+, CocoaPods (`sudo gem install cocoapods` or `brew install cocoapods`)
+- iOS: Xcode 26+ (Capacitor 8 uses Swift Package Manager — no CocoaPods needed)
 - Android: Android Studio (Otter or newer) + an emulator or a connected device, JDK 21
 
 ## Setup
@@ -118,9 +118,10 @@ all native plugins: CapacitorCookies, CapacitorHttp, WebView, CapacitorCameraCro
 - **`native CapacitorCameraCrop registered: ✅ yes`** → the native plugin is wired
   up correctly; any failure is in the call itself.
 - **`❌ NO`** → the native plugin did not register with the bridge. Re-run
-  `cd .. && bun run build && cd example && npm install && npx cap sync`, and for
-  iOS make sure `pod install` ran (it happens inside `cap sync`). Do a clean
-  build in Xcode/Android Studio if needed.
+  `cd .. && bun run build && cd example && npm install && npx cap sync`. On iOS
+  (SPM), open the project in Xcode and let it resolve Swift packages (File →
+  Packages → Resolve), then clean-build. Confirm the plugin is listed under the
+  app's Swift Package dependencies.
 
 > **Note on access pattern:** this build-free harness calls
 > `window.Capacitor.registerPlugin('CapacitorCameraCrop')` to reach the plugin.

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android: `minSdk` 22 → 23, `compileSdk`/`targetSdk` → 36, AGP 8.7.2, Kotlin 1.9.25, JDK 21.
 - Android: renamed plugin namespace `com.example.capacitorcameracrop` → `dev.tescari.capacitorcameracrop`.
 - iOS: raised deployment target 13.0 → 14.0, Swift 5.1 → 5.9.
+- iOS: **added Swift Package Manager support** (`Package.swift`). Capacitor 8 defaults new iOS apps to SPM, so this is required for the plugin to link and register there.
+- iOS: migrated plugin registration to Swift-native `CAPBridgedPlugin` conformance and **removed the legacy `CapacitorCameraCropPlugin.m`**. SPM targets cannot mix Objective-C and Swift; the Swift conformance also works for CocoaPods.
 
 ### Notes
 

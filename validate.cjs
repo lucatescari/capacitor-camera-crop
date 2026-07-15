@@ -51,9 +51,9 @@ check(
 );
 
 check(
-  'iOS Objective-C bridge',
-  fs.existsSync('ios/Plugin/CapacitorCameraCropPlugin.m'),
-  'ios/Plugin/CapacitorCameraCropPlugin.m not found'
+  'iOS Swift Package manifest',
+  fs.existsSync('Package.swift'),
+  'Package.swift not found (required for SPM-based Capacitor apps)'
 );
 
 check(

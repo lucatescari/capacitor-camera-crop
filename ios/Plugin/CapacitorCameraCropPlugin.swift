@@ -5,7 +5,15 @@ import PhotosUI
 import CropViewController
 
 @objc(CapacitorCameraCropPlugin)
-public class CapacitorCameraCropPlugin: CAPPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate, CropViewControllerDelegate {
+public class CapacitorCameraCropPlugin: CAPPlugin, CAPBridgedPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate, CropViewControllerDelegate {
+    // CAPBridgedPlugin conformance — required for Capacitor 6+ / SPM registration.
+    // Replaces the legacy CapacitorCameraCropPlugin.m CAP_PLUGIN macro.
+    public let identifier = "CapacitorCameraCropPlugin"
+    public let jsName = "CapacitorCameraCrop"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "captureAndCrop", returnType: CAPPluginReturnPromise)
+    ]
+
     private var call: CAPPluginCall?
     private var pendingImage: UIImage?
     
