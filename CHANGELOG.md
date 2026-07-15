@@ -58,5 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Platform support at 1.0.0: iOS 13.0+, Android API 22+, Capacitor 6. (Web: not supported — throws `unimplemented`.)
 
 <!-- Add the matching GitHub release/tag links as releases are published. -->
+[2.0.0]: https://github.com/lucatescari/capacitor-camera-crop/releases/tag/2.0.0
 [1.0.3]: https://github.com/lucatescari/capacitor-camera-crop/releases/tag/1.0.3
 [1.0.1]: https://github.com/lucatescari/capacitor-camera-crop/releases/tag/1.0.1
