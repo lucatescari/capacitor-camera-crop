@@ -3,21 +3,28 @@
  *
  * Singleton utility for managing a fullscreen black overlay during native operations.
  * Prevents visual flicker when transitioning between image input and cropping views.
+ *
+ * Reference-counted: overlapping captureAndCrop() calls share one overlay, and it is
+ * only torn down once the last in-flight call finishes, so a fast call finishing first
+ * can't remove the overlay while another call is still running.
  */
 class OverlayManagerClass {
   private overlay: HTMLDivElement | null = null;
   private fadeTimeout: number | null = null;
+  private activeCount = 0;
 
   /**
-   * Shows the fullscreen black overlay with fade-in animation
+   * Shows the fullscreen black overlay with fade-in animation.
    */
   show(): void {
-    // Prevent duplicate overlays
+    this.activeCount++;
+
+    // Overlay already present (another call is in flight) — nothing more to do.
     if (this.overlay) {
       return;
     }
 
-    // Clear any pending hide animations
+    // Clear any pending hide animation.
     if (this.fadeTimeout) {
       window.clearTimeout(this.fadeTimeout);
       this.fadeTimeout = null;
@@ -25,8 +32,8 @@ class OverlayManagerClass {
 
     this.overlay = document.createElement('div');
 
-    // Apply inline styles with safe area support
-    // Using env() CSS variables ensures safe areas are respected on all platforms
+    // Apply inline styles with safe area support.
+    // Using env() CSS variables ensures safe areas are respected on all platforms.
     Object.assign(this.overlay.style, {
       position: 'fixed',
       top: 'env(safe-area-inset-top, 0px)',
@@ -41,7 +48,7 @@ class OverlayManagerClass {
 
     document.body.appendChild(this.overlay);
 
-    // Trigger fade-in animation
+    // Trigger fade-in animation.
     requestAnimationFrame(() => {
       if (this.overlay) {
         this.overlay.style.opacity = '1';
@@ -50,18 +57,24 @@ class OverlayManagerClass {
   }
 
   /**
-   * Hides the overlay with fade-out animation and removes from DOM
+   * Hides the overlay once the last in-flight operation finishes, with a fade-out
+   * animation, and removes it from the DOM.
    */
   hide(): void {
-    if (!this.overlay) {
+    if (this.activeCount > 0) {
+      this.activeCount--;
+    }
+
+    // Other calls are still active, or there's nothing to hide.
+    if (this.activeCount > 0 || !this.overlay) {
       return;
     }
 
-    // Start fade-out
+    // Start fade-out.
     this.overlay.style.transition = 'opacity 200ms ease-out';
     this.overlay.style.opacity = '0';
 
-    // Remove from DOM after animation completes
+    // Remove from DOM after animation completes.
     this.fadeTimeout = window.setTimeout(() => {
       if (this.overlay && this.overlay.parentNode) {
         this.overlay.parentNode.removeChild(this.overlay);
@@ -69,30 +82,6 @@ class OverlayManagerClass {
       this.overlay = null;
       this.fadeTimeout = null;
     }, 200);
-  }
-
-  /**
-   * Checks if overlay is currently visible
-   */
-  isVisible(): boolean {
-    return this.overlay !== null;
-  }
-
-  /**
-   * Force removes the overlay immediately without animation
-   * Use only in emergency cleanup scenarios
-   */
-  forceHide(): void {
-    if (this.fadeTimeout) {
-      window.clearTimeout(this.fadeTimeout);
-      this.fadeTimeout = null;
-    }
-
-    if (this.overlay && this.overlay.parentNode) {
-      this.overlay.parentNode.removeChild(this.overlay);
-    }
-
-    this.overlay = null;
   }
 }
 

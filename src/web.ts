@@ -11,4 +11,3 @@ export class CapacitorCameraCropWeb extends WebPlugin implements CapacitorCamera
     throw this.unimplemented('CapacitorCameraCrop is not supported on the web platform.');
   }
 }
-

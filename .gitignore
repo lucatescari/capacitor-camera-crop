@@ -38,3 +38,6 @@ yarn-error.log*
 .tmp/
 .cache/
 
+# Internal planning/spec docs (not for the public repo)
+docs/superpowers/
+
