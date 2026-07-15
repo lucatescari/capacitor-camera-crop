@@ -39,6 +39,7 @@
   <body>
     <h1>capacitor-camera-crop</h1>
     <p class="sub">Test harness — pick options, tap <em>Capture &amp; Crop</em>, verify the result.</p>
+    <pre id="diag">Loading Capacitor…</pre>
 
     <fieldset>
       <legend>Source</legend>
@@ -116,6 +117,34 @@
         return o;
       }
 
+      // Acquire the plugin the correct way for a no-bundler app: registerPlugin()
+      // builds a proxy that bridges to the native plugin by name. Accessing
+      // window.Capacitor.Plugins.X does NOT work here — that object is only
+      // populated when a bundled app imports the plugin package.
+      const cap = window.Capacitor;
+      const plugin = cap && typeof cap.registerPlugin === 'function'
+        ? cap.registerPlugin('CapacitorCameraCrop')
+        : null;
+
+      // Diagnostics: show platform and which native plugins the bridge registered.
+      // If "CapacitorCameraCrop" is missing from PluginHeaders on a device, the
+      // NATIVE plugin failed to register (rebuild / check pod). If it's present,
+      // the bridge is healthy.
+      (function showDiag() {
+        const diag = document.getElementById('diag');
+        if (!cap) {
+          diag.textContent = 'window.Capacitor not found — this page only works inside a Capacitor app (npx cap run ios|android), not a plain browser.';
+          return;
+        }
+        const headers = cap.PluginHeaders || [];
+        const names = headers.map(h => h.name);
+        const registered = names.includes('CapacitorCameraCrop');
+        diag.textContent =
+          'platform: ' + (cap.getPlatform ? cap.getPlatform() : '?') +
+          '\nnative CapacitorCameraCrop registered: ' + (registered ? '✅ yes' : '❌ NO — native plugin not found in bridge') +
+          '\nall native plugins: ' + (names.length ? names.join(', ') : '(none reported)');
+      })();
+
       async function run() {
         const status = document.getElementById('status');
         const output = document.getElementById('output');
@@ -125,10 +154,9 @@
         const requested = opts();
         output.textContent = 'Requested options:\n' + JSON.stringify(requested, null, 2);
 
-        const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorCameraCrop;
         if (!plugin) {
           status.className = 'err';
-          status.textContent = 'Plugin not found on window.Capacitor.Plugins — run `npx cap sync` and launch on a device/emulator (this page does nothing in a plain browser).';
+          status.textContent = 'window.Capacitor.registerPlugin unavailable — launch inside a Capacitor app on a device/emulator (this page does nothing in a plain browser).';
           return;
         }
 

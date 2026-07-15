@@ -105,6 +105,29 @@ Exercise each combination on **both** platforms:
 > The camera source requires a physical device (simulators/emulators have no
 > real camera). Gallery + crop paths work on simulator/emulator.
 
+## Diagnostics & troubleshooting
+
+The page shows a diagnostics line at the top:
+
+```
+platform: ios
+native CapacitorCameraCrop registered: ✅ yes
+all native plugins: CapacitorCookies, CapacitorHttp, WebView, CapacitorCameraCrop
+```
+
+- **`native CapacitorCameraCrop registered: ✅ yes`** → the native plugin is wired
+  up correctly; any failure is in the call itself.
+- **`❌ NO`** → the native plugin did not register with the bridge. Re-run
+  `cd .. && bun run build && cd example && npm install && npx cap sync`, and for
+  iOS make sure `pod install` ran (it happens inside `cap sync`). Do a clean
+  build in Xcode/Android Studio if needed.
+
+> **Note on access pattern:** this build-free harness calls
+> `window.Capacitor.registerPlugin('CapacitorCameraCrop')` to reach the plugin.
+> `window.Capacitor.Plugins.CapacitorCameraCrop` is **not** populated in a
+> no-bundler app (that object is only filled when a bundled app `import`s the
+> plugin package), so don't rely on it here.
+
 ## Testing against Capacitor 7
 
 The plugin supports `^7.0.0 || ^8.0.0`. To verify the Cap 7 path, temporarily
