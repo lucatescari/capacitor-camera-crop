@@ -229,5 +229,6 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for local
+setup, how to test native changes with the `example/` app, and conventions.
 
