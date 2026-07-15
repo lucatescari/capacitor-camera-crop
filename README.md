@@ -46,6 +46,18 @@ Add the following keys to your `Info.plist`:
 
 ## Android Setup
 
+This plugin uses [uCrop](https://github.com/Yalantis/uCrop) for cropping, which is published on **JitPack**. Add the JitPack repository to your app's root `android/build.gradle` (or `settings.gradle` if you use centralized repositories):
+
+```gradle
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
 The plugin automatically requests the necessary permissions. Make sure your `AndroidManifest.xml` includes:
 
 ```xml
