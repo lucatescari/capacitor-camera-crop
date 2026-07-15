@@ -65,7 +65,7 @@ check(
 // Check Android files
 check(
   'Android Kotlin implementation',
-  fs.existsSync('android/src/main/java/com/example/capacitorcameracrop/CapacitorCameraCropPlugin.kt'),
+  fs.existsSync('android/src/main/java/dev/tescari/capacitorcameracrop/CapacitorCameraCropPlugin.kt'),
   'Android plugin not found'
 );
 

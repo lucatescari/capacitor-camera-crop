@@ -1,4 +1,4 @@
-package com.example.capacitorcameracrop
+package dev.tescari.capacitorcameracrop
 
 import android.app.Activity
 import android.content.Intent
