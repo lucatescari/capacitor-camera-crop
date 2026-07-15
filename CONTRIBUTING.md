@@ -31,6 +31,29 @@ Use the demo app in [`example/`](./example) — it exercises the full API on a r
 device or simulator/emulator. Follow `example/README.md` for setup. Please verify
 both platforms when touching native code (camera capture needs a physical device).
 
+## Keeping your Apple team ID out of git (iOS)
+
+The example's `ios/` project is committed, and Xcode's Automatic signing writes
+your personal `DEVELOPMENT_TEAM` into `project.pbxproj` when you build. The
+committed value is intentionally blank; keep it that way:
+
+1. **Ignore your local signing change** (recommended, per clone):
+
+   ```bash
+   git update-index --skip-worktree example/ios/App/App.xcodeproj/project.pbxproj
+   ```
+
+   Your Xcode keeps your team locally (signing works), but git never stages it.
+   To intentionally change that file later: `--no-skip-worktree`, edit, re-set.
+
+2. **Enable the pre-commit hook** (blocks a team ID from being committed):
+
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+
+CI also fails if a non-empty `DEVELOPMENT_TEAM` is ever committed, as a backstop.
+
 ## Conventions
 
 - TypeScript is `strict`; keep the public API and `definitions.ts` in sync with both

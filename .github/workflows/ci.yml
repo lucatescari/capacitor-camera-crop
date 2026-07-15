@@ -12,6 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Guard against leaked Apple signing team
+        run: |
+          if grep -rn 'DEVELOPMENT_TEAM = [A-Za-z0-9]' --include=project.pbxproj .; then
+            echo "::error::A non-empty DEVELOPMENT_TEAM is committed. Blank it (DEVELOPMENT_TEAM = \"\";) before committing."
+            exit 1
+          fi
+          echo "OK: no Apple team ID committed."
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 

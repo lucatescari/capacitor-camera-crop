@@ -1,0 +1,22 @@
+#!/bin/sh
+# Blocks a commit that would leak an Apple signing team ID from a committed
+# Xcode project. Enable with: git config core.hooksPath .githooks
+#
+# Xcode's Automatic signing writes DEVELOPMENT_TEAM into project.pbxproj; this
+# keeps that personal value out of the repo.
+
+leaks=$(git diff --cached -U0 | grep -E '^\+.*DEVELOPMENT_TEAM = [A-Za-z0-9]')
+
+if [ -n "$leaks" ]; then
+  echo "pre-commit: refusing to commit an Apple team ID (DEVELOPMENT_TEAM)."
+  echo "$leaks"
+  echo
+  echo "Blank it before committing, e.g.:"
+  echo "  git checkout -- '<the .pbxproj>'   # if you don't intend to change it"
+  echo "  # or blank the value: DEVELOPMENT_TEAM = \"\";"
+  echo "Tip: keep your local team out of git with"
+  echo "  git update-index --skip-worktree example/ios/App/App.xcodeproj/project.pbxproj"
+  exit 1
+fi
+
+exit 0
