@@ -36,8 +36,11 @@
     </application>
 
     <!-- Permissions -->
-
+    <!--
+      No CAMERA or READ_MEDIA_IMAGES needed: this plugin uses delegated intents
+      (ACTION_IMAGE_CAPTURE / ACTION_PICK) which run in the system camera/gallery
+      apps and grant temporary access to the returned URI. Declaring CAMERA
+      without granting it at runtime actually BLOCKS ACTION_IMAGE_CAPTURE.
+    -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 </manifest>

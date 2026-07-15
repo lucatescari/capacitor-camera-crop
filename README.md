@@ -58,14 +58,15 @@ allprojects {
 }
 ```
 
-The plugin automatically requests the necessary permissions. Make sure your `AndroidManifest.xml` includes:
+### Permissions
 
-```xml
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-```
+This plugin does **not** require the `CAMERA` or `READ_MEDIA_IMAGES` permissions. It uses delegated intents — `ACTION_IMAGE_CAPTURE` (system camera app) and `ACTION_PICK` (system gallery) — which run in those apps and hand back a URI your app is temporarily granted to read.
 
-You also need to add a FileProvider to your app's `AndroidManifest.xml`:
+> ⚠️ Do **not** add `<uses-permission android:name="android.permission.CAMERA" />` to your manifest for this plugin. Declaring `CAMERA` without requesting it at runtime causes Android to **block** `ACTION_IMAGE_CAPTURE` with a permission-denial crash. Only add `CAMERA` if some *other* part of your app uses the camera directly, and then you must request it at runtime yourself.
+
+### FileProvider
+
+You need a FileProvider in your app's `AndroidManifest.xml` (used to hand the camera app a URI to write the captured photo into):
 
 ```xml
 <provider
