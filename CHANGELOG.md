@@ -57,5 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android: API 22+ (Android 5.1+)
 - Web: Not supported (throws unimplemented error)
 
-[0.1.0]: https://github.com/yourusername/capacitor-camera-crop/releases/tag/v0.1.0
+[2.0.0]: https://github.com/lucatescari/capacitor-camera-crop/releases/tag/v2.0.0
+[0.1.0]: https://github.com/lucatescari/capacitor-camera-crop/releases/tag/v0.1.0
 
