@@ -64,8 +64,10 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.25'
     
-    // uCrop for image cropping
-    implementation 'com.github.yalantis:ucrop:2.2.11'
+    // uCrop for image cropping (JitPack-only; consumers must add the jitpack repo).
+    // Pinned to 2.2.8: AndroidX-compatible and reliably published on JitPack
+    // (2.2.9-2.2.11 have known JitPack 500 / missing-.aar issues).
+    implementation 'com.github.yalantis:ucrop:2.2.8'
     
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
