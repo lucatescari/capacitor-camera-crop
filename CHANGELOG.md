@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-15
+
+### Changed
+
+- **BREAKING:** now requires Capacitor 7 or 8 (`@capacitor/core` `^7.0.0 || ^8.0.0`). Dropped Capacitor 6 support.
+- Android: `minSdk` 22 → 23, `compileSdk`/`targetSdk` → 36, AGP 8.7.2, Kotlin 1.9.25, JDK 21.
+- Android: renamed plugin namespace `com.example.capacitorcameracrop` → `dev.tescari.capacitorcameracrop`.
+- iOS: raised deployment target 13.0 → 14.0, Swift 5.1 → 5.9.
+
+### Notes
+
+- Public API (`captureAndCrop`) is unchanged; no consumer code changes required beyond upgrading Capacitor.
+- uCrop (Android) and CropViewController (iOS) retained.
+
 ## [0.1.0] - 2025-11-12
 
 ### Added

@@ -25,6 +25,12 @@ Then sync your Capacitor project:
 npx cap sync
 ```
 
+## Requirements
+
+- Capacitor 7 or 8
+- iOS 14.0+
+- Android API 23+ (Android 6.0+)
+
 ## iOS Setup
 
 Add the following keys to your `Info.plist`:
